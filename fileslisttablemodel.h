@@ -1,38 +1,7 @@
 #pragma once
 
-#include "qicon.h"
+#include "secureerase.h"
 #include <QAbstractTableModel>
-
-class FileRemoveInfo
-{
-public:
-
-    enum OpStatus
-    {
-        NotStarted = 0,
-        Started,
-        Finished
-    };
-
-    FileRemoveInfo(const QString& path, bool bDir)
-        : Path(path), IsDirectory(bDir)
-    {
-    };
-
-    bool operator<(const FileRemoveInfo& other) const
-    {
-        return Path < other.Path;
-    }
-
-    QString Path;
-    bool IsDirectory = false;
-    qint64 Size = 0;
-    QIcon Icon;
-    OpStatus Status = NotStarted;
-    int LastError = 0;
-    int Progress = 0;
-
-};
 
 class FilesListTableModel : public QAbstractTableModel
 {
@@ -52,6 +21,10 @@ public:
     };
 
     void AddItem(const QString& path, bool bDir);
+    void GetFilesToRemove(QList<FileRemoveInfo>& files);
+    int GetItemsCount();
+    FileRemoveInfo& GetItem(int nIndex);
+    void UpdateStatus(int nRow, FileRemoveInfo::OpStatus status);
 
     // Header:
     QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
@@ -65,5 +38,9 @@ public:
 
 private:
     QList<FileRemoveInfo> FilesList;
+    QIcon ImgError;
+    QIcon ImgSuccess;
+    QIcon ImgErase;
+
 };
 

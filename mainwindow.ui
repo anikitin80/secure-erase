@@ -99,7 +99,14 @@
         </property>
         <property name="icon">
          <iconset resource="resources.qrc">
-          <normaloff>:/img/start-32.png</normaloff>:/img/start-32.png</iconset>
+          <normaloff>:/img/start.ico</normaloff>:/img/start.ico</iconset>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QProgressBar" name="progressBar">
+        <property name="value">
+         <number>24</number>
         </property>
        </widget>
       </item>

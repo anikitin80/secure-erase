@@ -5,6 +5,10 @@
 FilesListTableModel::FilesListTableModel(QObject *parent)
     : QAbstractTableModel(parent)
 {
+    ImgError = QIcon(":/img/error.ico");
+    ImgSuccess = QIcon(":/img/success.ico");
+    ImgErase = QIcon(":/img/eraser.ico");
+
 }
 
 QVariant FilesListTableModel::headerData(int section, Qt::Orientation orientation, int role) const
@@ -63,9 +67,37 @@ QVariant FilesListTableModel::data(const QModelIndex &index, int role) const
         if(role == Qt::DisplayRole)
             return QVariant(QLocale("en_US").formattedDataSize(item.Size));
         break;
+    case ColStatus:
+        if(role == Qt::DisplayRole)
+        {
+            if(item.Status == FileRemoveInfo::Started)
+                return "Erasing...";
+            else if(item.Status == FileRemoveInfo::Finished)
+                return item.LastError? "Error ocurred" : "Completed";
+
+        }
+        else if(role == Qt::DecorationRole)
+        {
+            if(item.Status == FileRemoveInfo::Started)
+                return ImgErase;
+            else if(item.Status == FileRemoveInfo::Finished)
+                return item.LastError? ImgError : ImgSuccess;
+
+        }
+        break;
     }
 
     return QVariant();
+}
+
+int FilesListTableModel::GetItemsCount()
+{
+    return FilesList.size();
+}
+
+FileRemoveInfo& FilesListTableModel::GetItem(int nIndex)
+{
+    return FilesList[nIndex];
 }
 
 void FilesListTableModel::AddItem(const QString& path, bool bDir)
@@ -118,4 +150,19 @@ bool FilesListTableModel::removeRows(int row, int count, const QModelIndex& pare
     for(int nRow = row + count -1; nRow >= row; nRow--)
         FilesList.removeAt(nRow);
     endRemoveRows();
+    return true;
+}
+
+void FilesListTableModel::GetFilesToRemove(QList<FileRemoveInfo>& files)
+{
+    std::copy_if(FilesList.begin(), FilesList.end(), std::back_inserter(files),
+                 [](const FileRemoveInfo& file){ return file.Status != FileRemoveInfo::Finished;});
+}
+
+void FilesListTableModel::UpdateStatus(int nRow, FileRemoveInfo::OpStatus status)
+{
+    if(nRow < 0 || nRow >= FilesList.size())
+        return;
+    FilesList[nRow].Status = status;
+    emit dataChanged(QAbstractItemModel::createIndex(nRow, ColStatus), QAbstractItemModel::createIndex(nRow, ColStatus));
 }

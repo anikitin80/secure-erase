@@ -3,10 +3,11 @@
         <file>img/add-file.ico</file>
         <file>img/add-folder.ico</file>
         <file>img/delete.ico</file>
-        <file>img/start-16.png</file>
-        <file>img/stop-16.png</file>
-        <file>img/start-32.png</file>
-        <file>img/stop-32.png</file>
         <file>img/main.ico</file>
+        <file>img/eraser.ico</file>
+        <file>img/error.ico</file>
+        <file>img/start.ico</file>
+        <file>img/stop.ico</file>
+        <file>img/success.ico</file>
     </qresource>
 </RCC>
