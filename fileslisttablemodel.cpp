@@ -11,7 +11,7 @@ FilesListTableModel::FilesListTableModel(QObject *parent)
 
 }
 
-QVariant FilesListTableModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant FilesListTableModel::headerData(int section, Qt::Orientation, int role) const
 {
     if(role != Qt::DisplayRole)
         return QVariant();

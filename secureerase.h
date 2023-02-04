@@ -33,4 +33,4 @@ public:
     int LastError = 0;
 };
 
-bool SecureEraseFile(FileRemoveInfo& fileInfo, CEraseMethodBase* pMethod, bool& bCancel);
+int SecureEraseFile(QString filePath, CEraseMethodBase* pMethod, bool& bCancel);

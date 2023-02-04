@@ -4,6 +4,7 @@
 #include "fileslisttablemodel.h"
 #include "EraseMethod.h"
 #include "secureerase.h"
+#include "QDirIterator.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -45,8 +46,11 @@ void MainWindow::on_actionAddFolder_triggered()
     // show folder selection dialog
     QString dir = QFileDialog::getExistingDirectory(this, "Select folder to delete");
 
-    // add new row
-    FilesTableModel->AddItem(dir, true);
+    if(!dir.isEmpty())
+    {
+        // add new row
+        FilesTableModel->AddItem(dir, true);
+    }
 }
 
 void MainWindow::on_actionRemove_triggered()
@@ -87,6 +91,7 @@ void MainWindow::DoEraseFiles()
     m_TotalSize = m_ProcessedSize = 0;
     ui->progressBar->setValue(0);
 
+    // get method according to the combobox selection
     EraseMethod method = static_cast<EraseMethod>(ui->comboMethod->currentData().toInt());
     CEraseMethodBase* pMethod = CEraseMethodBase::GetMethod(method);
 
@@ -114,15 +119,46 @@ void MainWindow::DoEraseFiles()
     }
 
     delete pMethod;
-    m_bInProgress = false;
 
+    // finish and update controls
+    m_bInProgress = false;
     UpdateControls(false);
 }
 
 void MainWindow::DoEraseFile(FileRemoveInfo& file, CEraseMethodBase* pMethod)
-{    
-    SecureEraseFile(file, pMethod, m_bCancel);
-    m_ProcessedSize += file.Size;
+{
+    if(file.IsDirectory)
+    {
+        // process folder
+        QDirIterator it(file.Path, QDir::AllEntries |QDir::NoDotAndDotDot, QDirIterator::Subdirectories);
+        while (it.hasNext())
+        {
+            QFileInfo childFile(it.next());
+            if(childFile.isDir())
+                continue;
+            quint64 size = childFile.size();
+            int errorCode = SecureEraseFile(childFile.filePath(), pMethod, m_bCancel);
+            if(0 != errorCode)
+                file.LastError = errorCode;
+            UpdateProgress(size);
+        }
+
+        // remove empty directory
+        QDir dir(file.Path);
+        if(dir.isEmpty())
+            dir.removeRecursively();
+    }
+    else
+    {
+        // process single file
+        file.LastError = SecureEraseFile(file.Path, pMethod, m_bCancel);
+        UpdateProgress(file.Size);
+    }
+}
+
+void MainWindow::UpdateProgress(quint64 addSize)
+{
+    m_ProcessedSize += addSize;
     if(m_TotalSize)
         ui->progressBar->setValue(100*m_ProcessedSize/m_TotalSize);
 }

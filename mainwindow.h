@@ -24,6 +24,7 @@ protected:
     void DoEraseFiles();
     void DoEraseFile(FileRemoveInfo& file, CEraseMethodBase* pMethod);
     void UpdateControls(bool bStarted);
+    void UpdateProgress(quint64 addSize);
 
 private slots:
     void on_actionAddFile_triggered();

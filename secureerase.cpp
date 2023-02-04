@@ -5,17 +5,16 @@
 
 // use low-level WinAPI functions for writing direct to file without caching
 
-bool SecureEraseFile(FileRemoveInfo& fileInfo, CEraseMethodBase* pMethod, bool& bCancel)
+int SecureEraseFile(QString filePath, CEraseMethodBase* pMethod, bool& bCancel)
 {
     bool bResult = false;
+    int  errorCode = 0;
     HANDLE hFile = INVALID_HANDLE_VALUE;
 
     // convert QString to wchar array
     wchar_t path[_MAX_PATH] = {0};
-    int iLen = fileInfo.Path.toWCharArray(path);
+    int iLen = filePath.toWCharArray(path);
     path[iLen] = '\0';
-
-    fileInfo.LastError = 0;
 
     DWORD dwFlagsAndAttributes = FILE_FLAG_WRITE_THROUGH | FILE_FLAG_SEQUENTIAL_SCAN;
     DWORD dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
@@ -52,11 +51,10 @@ bool SecureEraseFile(FileRemoveInfo& fileInfo, CEraseMethodBase* pMethod, bool& 
                         DWORD nNeedToWrite = (DWORD) qMin(pMethod->GetBlockSize(), allocationSize - done);
 
                         bResult = WriteFile(hFile, pMethod->GetOverwriteBlock().data(), nNeedToWrite, &written, NULL);
-                        if(bResult)
-                            qApp->processEvents();
-                        else
+                        if(!bResult)
                             break;
 
+                        qApp->processEvents();  // need to avoid UI freezing
                         done += written;                        
                     }
                 }
@@ -87,7 +85,9 @@ bool SecureEraseFile(FileRemoveInfo& fileInfo, CEraseMethodBase* pMethod, bool& 
     }
 
     if(!bResult)
-        fileInfo.LastError = GetLastError();
+        errorCode = GetLastError();
+    else
+        errorCode = 0;
 
-    return bResult;
+    return errorCode;
 }
