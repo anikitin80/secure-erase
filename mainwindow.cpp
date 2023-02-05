@@ -1,10 +1,10 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "QFileDialog.h"
+#include "QFileDialog"
 #include "fileslisttablemodel.h"
-#include "EraseMethod.h"
+#include "erasemethod.h"
 #include "secureerase.h"
-#include "QDirIterator.h"
+#include "QDirIterator"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)

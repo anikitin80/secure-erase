@@ -1,6 +1,6 @@
 #include "fileslisttablemodel.h"
-#include "QFileIconProvider.h"
-#include "QDirIterator.h"
+#include "QFileIconProvider"
+#include "QDirIterator"
 
 FilesListTableModel::FilesListTableModel(QObject *parent)
     : QAbstractTableModel(parent)

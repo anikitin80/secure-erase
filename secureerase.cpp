@@ -1,9 +1,15 @@
 #include "secureerase.h"
-#include "QApplication.h"
+#include "QApplication"
+#include "QFile"
 #include "erasemethod.h"
-#include "windows.h"
 
-// use low-level WinAPI functions for writing direct to file without caching
+#ifdef _WIN32
+    #include "windows.h"
+#endif
+
+#ifdef _WIN32
+
+// Windows version - use low-level WinAPI functions for writing direct to file without caching
 
 int SecureEraseFile(QString filePath, CEraseMethodBase* pMethod, bool& bCancel)
 {
@@ -91,3 +97,17 @@ int SecureEraseFile(QString filePath, CEraseMethodBase* pMethod, bool& bCancel)
 
     return errorCode;
 }
+
+#elif __linux__
+
+// linux version - just stub for testing
+
+int SecureEraseFile(QString filePath, CEraseMethodBase* pMethod, bool& bCancel)
+{
+    if(!QFile::remove(filePath))
+        return -1;
+
+    return 0;
+}
+
+#endif

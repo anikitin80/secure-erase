@@ -1,5 +1,5 @@
 #pragma once
-#include "QByteArray.h"
+#include "QByteArray"
 
 #define FILL_RANDOM_DATA    0x1
 
