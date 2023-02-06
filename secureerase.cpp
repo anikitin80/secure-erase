@@ -5,6 +5,12 @@
 
 #ifdef _WIN32
     #include "windows.h"
+#elif __linux__
+    #include <fcntl.h>
+    #include <sys/stat.h>
+    #include <unistd.h>
+    #include <sys/param.h>
+    #include <stdio.h>
 #endif
 
 #ifdef _WIN32
@@ -50,7 +56,7 @@ int SecureEraseFile(QString filePath, CEraseMethodBase* pMethod, bool& bCancel)
                         if (bCancel)
                         {
                             ::CloseHandle(hFile);
-                            return true;
+                            return 0;
                         }
 
                         DWORD written = 0;
@@ -100,12 +106,57 @@ int SecureEraseFile(QString filePath, CEraseMethodBase* pMethod, bool& bCancel)
 
 #elif __linux__
 
-// linux version - just stub for testing
+// Linux version of secure erase
 
 int SecureEraseFile(QString filePath, CEraseMethodBase* pMethod, bool& bCancel)
 {
-    if(!QFile::remove(filePath))
-        return -1;
+    // open file
+    int fd = open(filePath.toUtf8(), O_SYNC|O_RDWR);
+    if(fd == -1)
+        return errno;
+
+    // get file size
+    struct stat64 file_stat;
+    fstat64(fd, &file_stat);
+    int64_t allocation_size = file_stat.st_size;
+
+    // pass through all method's iterations
+    pMethod->ResetIteration();
+    while (pMethod->NextIteration())
+    {
+        lseek(fd, 0, SEEK_SET);
+
+        int64_t done = 0;
+        while (done < allocation_size)
+        {
+            if (bCancel)
+            {
+                close(fd);
+                return 0;
+            }
+
+            int64_t nNeedToWrite = MIN(pMethod->GetBlockSize(), allocation_size - done);
+            int64_t written = write(fd, (void*)pMethod->GetOverwriteBlock().data(), nNeedToWrite);
+
+            if(-1 == written)
+            {
+                close(fd);
+                return errno;
+            }
+
+            qApp->processEvents();  // need to avoid UI freezing
+            done += written;
+        }
+
+        fsync(fd);
+    }
+
+    //close file
+    close(fd);
+
+    // remove file
+    if(-1 == remove(filePath.toUtf8()))
+        return errno;
 
     return 0;
 }
